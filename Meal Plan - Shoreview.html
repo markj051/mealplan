@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Away Meal Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean: #2E6E7E;
+    --ocean-dark: #1a5060;
+    --terracotta: #C4622D;
+    --sand: #EDF4F6;
+    --cream: #F5FBFC;
+    --olive: #5C6B3A;
+    --text: #1A2A2E;
+    --muted: #6A8A92;
+    --border: #C8DDE2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+  .hero {
+    background: var(--ocean);
+    padding: 40px 28px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(92,107,58,0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(196,98,45,0.15) 0%, transparent 60%);
+  }
+  .hero-tag { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 10px; position: relative; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(24px, 5vw, 38px); color: #fff; position: relative; line-height: 1.2; }
+  .hero h1 em { color: #F0C87A; font-style: italic; }
+  .hero-sub { color: rgba(255,255,255,0.72); font-size: 13px; margin-top: 8px; font-weight: 300; position: relative; }
+  .badges { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-top: 16px; position: relative; }
+  .badge { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: rgba(255,255,255,0.85); }
+
+  .location-banner {
+    background: var(--ocean-dark);
+    color: #fff;
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .location-banner span { opacity: 0.8; font-weight: 300; margin-left: 6px; }
+
+  .schedule-bar {
+    background: var(--sand);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+  }
+  .schedule-item { display: flex; align-items: center; gap: 6px; }
+  .schedule-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ocean); }
+
+  .legend { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; padding: 12px 20px; background: var(--cream); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot-shared { background: var(--olive); }
+  .dot-adult { background: var(--ocean); }
+  .dot-child { background: var(--terracotta); }
+
+  .section-label {
+    background: var(--sand);
+    border-top: 2px solid var(--ocean);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ocean);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .week-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+  .day-card { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); animation: fadeUp 0.4s ease both; }
+  .day-card:last-child { border-right: none; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  .day-card:nth-child(1) { animation-delay: 0.05s; }
+  .day-card:nth-child(2) { animation-delay: 0.10s; }
+  .day-card:nth-child(3) { animation-delay: 0.15s; }
+
+  .day-header { padding: 12px 18px 10px; background: var(--sand); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
+  .day-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--ocean); }
+  .day-sub { font-size: 11px; color: var(--muted); }
+  .day-prep { font-size: 11px; color: var(--muted); background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 2px 9px; }
+
+  .meal-section { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .meal-section:last-child { border-bottom: none; }
+  .meal-type { font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .meal-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 5px; }
+  .meal-item:last-child { margin-bottom: 0; }
+  .who-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .adult .who-dot { background: var(--ocean); }
+  .child .who-dot { background: var(--terracotta); }
+  .shared .who-dot { background: var(--olive); }
+  .meal-text { font-size: 13px; line-height: 1.45; color: var(--text); }
+  .meal-note { font-size: 11px; color: var(--muted); font-style: italic; margin-top: 2px; }
+  .recipe-link { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--ocean); text-decoration: none; font-weight: 500; margin-top: 3px; border-bottom: 1px dashed var(--ocean); opacity: 0.85; transition: opacity 0.15s; }
+  .recipe-link:hover { opacity: 1; }
+
+  .packed-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(46,110,126,0.12);
+    color: var(--ocean);
+    border: 1px solid rgba(46,110,126,0.25);
+    border-radius: 10px;
+    padding: 1px 8px;
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+
+  .tip-bar {
+    background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-dark) 100%);
+    color: #fff;
+    padding: 13px 22px;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .tip-bar .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .pantry-bar {
+    background: linear-gradient(90deg, var(--olive) 0%, #3d4f27 100%);
+    color: #fff;
+    padding: 13px 22px;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .pantry-bar .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .notes-section { padding: 24px 28px; background: var(--sand); border-top: 2px solid var(--border); }
+  .notes-section h2 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--ocean); margin-bottom: 16px; }
+  .notes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .note-card { background: var(--cream); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .note-card h3 { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--terracotta); margin-bottom: 9px; }
+  .note-card ul { list-style: none; }
+  .note-card ul li { font-size: 12.5px; color: var(--text); padding: 4px 0 4px 13px; position: relative; border-bottom: 1px solid var(--border); line-height: 1.4; }
+  .note-card ul li:last-child { border-bottom: none; }
+  .note-card ul li::before { content: '·'; position: absolute; left: 2px; color: var(--muted); font-size: 16px; line-height: 1.1; }
+
+  .footer { text-align: center; padding: 16px; font-size: 11px; color: var(--muted); background: var(--cream); border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">Mediterranean Meal Plan</div>
+  <h1>✈️ Away Days</h1>
+  <div class="hero-sub">Tue dinner · Wed full day · Thu full day · Fri breakfast & lunch</div>
+  <div class="badges">
+    <span class="badge">🫒 Mediterranean</span>
+    <span class="badge">⚡ Work-week simple</span>
+    <span class="badge">♻️ Leftovers built-in</span>
+    <span class="badge">🧳 Meal-prep friendly</span>
+  </div>
+</div>
+
+<div class="location-banner">
+  ✈️ Second Home &nbsp;<span>Tue evening → Fri midday</span>
+</div>
+
+<div class="schedule-bar">
+  <div class="schedule-item"><div class="schedule-dot"></div> Arrive Tuesday evening</div>
+  <div class="schedule-item"><div class="schedule-dot"></div> Wednesday — full day away</div>
+  <div class="schedule-item"><div class="schedule-dot"></div> Thursday — full day away</div>
+  <div class="schedule-item"><div class="schedule-dot"></div> Leave Friday midday after lunch</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot dot-adult"></div> You (solo meals)</div>
+  <div class="legend-item"><div class="dot dot-shared"></div> If your daughter joins</div>
+</div>
+
+<!-- TUESDAY DINNER -->
+<div class="section-label">📅 Tuesday — Dinner after arrival</div>
+<div class="week-grid">
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-name">Tuesday</div>
+      <div class="day-sub">Dinner only · ~20 min</div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Dinner</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Sheet pan chicken thighs (skinless) with zucchini, cherry tomatoes & artichoke hearts — garlic, lemon, oregano</div>
+        <div class="meal-note">Make extra — tomorrow's lunch is covered</div>
+        <div class="packed-tag">🧳 Pick up fresh on arrival or bring in cooler</div>
+        <a class="recipe-link" href="https://downshiftology.com/recipes/greek-sheet-pan-chicken/" target="_blank">📖 Recipe</a></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Tip</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Cook a double batch of chicken — it becomes Wednesday's pita lunch</div>
+        <div class="meal-note">One cook, two meals</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WEDNESDAY -->
+<div class="section-label">📅 Wednesday — Full day away</div>
+<div class="week-grid">
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-name">Wednesday</div>
+      <div class="day-prep">~15 min + slow cooker</div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Breakfast</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Smoothie: spinach, frozen berries, banana, almond milk, flaxseed</div>
+        <div class="meal-note">Great post-workout recovery option</div></div>
+      </div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Whole grain toast with avocado</div></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Lunch</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Leftover Tuesday chicken in a whole grain pita with lettuce, tomato, cucumber & tahini drizzle</div>
+        <div class="packed-tag">♻️ Leftover from Tuesday dinner</div></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Dinner</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Slow-cooker white bean & kale soup — diced tomatoes, garlic, celery, veggie broth & lemon</div>
+        <div class="meal-note">Set it in the morning, ready at dinner</div>
+        <div class="packed-tag">💡 Option: pre-make at home Sun, bring in containers</div>
+        <a class="recipe-link" href="https://jessicainthekitchen.com/white-bean-and-kale-soup-vegan-slow-cooker/" target="_blank">📖 Recipe</a></div>
+      </div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Crusty whole grain bread on the side</div></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Snacks</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Mixed fruit — watermelon, grapes, apple</div></div>
+      </div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Small handful of unsalted almonds</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THURSDAY -->
+<div class="section-label">📅 Thursday — Full day away</div>
+<div class="week-grid">
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-name">Thursday</div>
+      <div class="day-prep">~30 min</div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Breakfast</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Whole grain toast with smashed avocado, sliced tomato & everything bagel seasoning</div></div>
+      </div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Soft-boiled egg on the side</div>
+        <div class="meal-note">Bring hard-boiled eggs from home or pick up at second home</div></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Lunch</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Leftover white bean & kale soup — even better the next day</div>
+        <div class="packed-tag">♻️ Leftover from Wednesday dinner</div></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Dinner</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Shrimp stir-fry with olive oil, garlic, zucchini, cherry tomatoes & fresh herbs over whole wheat orzo</div>
+        <div class="meal-note">Add red pepper flakes for a kick</div>
+        <a class="recipe-link" href="https://www.themediterraneandish.com/sauteed-shrimp-zucchini/" target="_blank">📖 Recipe</a></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Snacks</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Sliced cucumber & celery sticks with hummus or guacamole</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FRIDAY AWAY -->
+<div class="section-label">📅 Friday — Morning & lunch before heading home</div>
+<div class="week-grid">
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-name">Friday</div>
+      <div class="day-sub">Breakfast & lunch only</div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Breakfast</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Overnight oats (prepped Thursday night) with almond milk, diced peaches, pumpkin seeds & honey</div>
+        <div class="meal-note">Prep jar Thursday night, ready to grab Friday morning</div>
+        <a class="recipe-link" href="https://www.loveandlemons.com/overnight-oats-recipe/" target="_blank">📖 Recipe</a></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Lunch (before heading home)</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Lentil & veggie power bowl — green lentils, roasted sweet potato, arugula, cucumber, cherry tomatoes, lemon-tahini dressing</div>
+        <div class="meal-note">Lentils & sweet potato can be prepped Wed night for this</div>
+        <a class="recipe-link" href="https://itsavegworldafterall.com/lentil-bowls/" target="_blank">📖 Recipe</a></div>
+      </div>
+    </div>
+    <div class="meal-section">
+      <div class="meal-type">Snack for the road</div>
+      <div class="meal-item adult"><div class="who-dot"></div>
+        <div><div class="meal-text">Apple + almond butter packet, or walnuts & dark chocolate</div>
+        <div class="meal-note">Easy travel snack heading back home</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tip-bar">
+  <span class="icon">♻️</span>
+  <span><strong>Built-in leftovers:</strong> Tuesday's sheet pan chicken → Wednesday's pita lunch · Wednesday's soup → Thursday's lunch · Wednesday night: prep lentils & roast sweet potato for Friday's bowl</span>
+</div>
+
+<div class="pantry-bar">
+  <span class="icon">🫙</span>
+  <span><strong>Keep stocked at second home:</strong> Olive oil · Tahini · Canned beans & tomatoes · Almond milk · Rolled oats · Whole grain bread/pita · Garlic · Lemons · Core spices (oregano, cumin, paprika, pepper flakes)</span>
+</div>
+
+<div class="notes-section">
+  <h2>Away Days Tips</h2>
+  <div class="notes-grid">
+    <div class="note-card">
+      <h3>🧳 What to Bring from Home</h3>
+      <ul>
+        <li>Pre-made white bean soup in containers (optional)</li>
+        <li>Hard-boiled eggs from your flock (Thu breakfast)</li>
+        <li>Fresh avocados, lemons, herbs</li>
+        <li>Chicken thighs & shrimp in a cooler if driving</li>
+        <li>Overnight oat jar already prepped for Thu night</li>
+      </ul>
+    </div>
+    <div class="note-card">
+      <h3>🛒 Pick Up on Arrival</h3>
+      <ul>
+        <li>Fresh zucchini, cherry tomatoes, cucumber</li>
+        <li>Arugula or spinach (small bag)</li>
+        <li>Sweet potato (1–2)</li>
+        <li>Whole grain bread & pita</li>
+        <li>Shrimp (frozen is fine)</li>
+        <li>Fruit for snacking</li>
+      </ul>
+    </div>
+    <div class="note-card">
+      <h3>⚡ Keeping It Simple</h3>
+      <ul>
+        <li>Three nights, two of which are leftover-based lunches</li>
+        <li>Slow cooker soup = set it and forget it for Wed</li>
+        <li>Shrimp stir-fry is under 20 minutes start to finish</li>
+        <li>Overnight oats take 2 minutes to prep the night before</li>
+        <li>Lentil bowl components travel well — prep Wed evening</li>
+      </ul>
+    </div>
+    <div class="note-card">
+      <h3>❤️ Staying on Track Away</h3>
+      <ul>
+        <li>All meals follow the same heart-healthy Mediterranean approach</li>
+        <li>Sodium stays low — stick to herbs, lemon & garlic for flavor</li>
+        <li>Keep almonds & walnuts on hand for easy snacking</li>
+        <li>Avoid the temptation to grab takeout — these meals are fast</li>
+        <li>Hydrate well especially on workout days</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  ✈️ Away Days Plan · See the Home Days plan for Mon, Tue AM, and Fri dinner · Consult your physician or a registered dietitian for personalized advice.
+</div>
+
+</body>
+</html>
