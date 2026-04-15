@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopping List — Two Homes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --olive: #5C6B3A;
+    --terracotta: #C4622D;
+    --ocean: #2E6E7E;
+    --ocean-dark: #1a5060;
+    --sand: #F5EDD8;
+    --sand-blue: #EDF4F6;
+    --cream: #FDFAF3;
+    --cream-blue: #F5FBFC;
+    --text: #2A2118;
+    --muted: #8A7B6A;
+    --border: #DDD5C0;
+    --border-blue: #C8DDE2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #f0f0ec; color: var(--text); min-height: 100vh; }
+
+  .hero {
+    background: linear-gradient(135deg, var(--olive) 0%, var(--ocean) 100%);
+    padding: 36px 28px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 60%, rgba(196,98,45,0.15) 0%, transparent 55%);
+  }
+  .hero-tag { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 10px; position: relative; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(22px, 4vw, 34px); color: #fff; position: relative; }
+  .hero h1 em { color: #F0C87A; font-style: italic; }
+  .hero-sub { color: rgba(255,255,255,0.72); font-size: 13px; margin-top: 8px; font-weight: 300; position: relative; }
+  .print-btn { display: inline-block; margin-top: 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 1px; padding: 7px 18px; border-radius: 20px; cursor: pointer; transition: background 0.2s; position: relative; }
+  .print-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--text);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: rgba(255,255,255,0.55);
+    background: transparent;
+  }
+  .tab-btn.active-home { color: #fff; background: var(--olive); }
+  .tab-btn.active-away { color: #fff; background: var(--ocean); }
+  .tab-btn:not(.active-home):not(.active-away):hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+  .tab-count {
+    font-size: 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-weight: 400;
+  }
+  .tab-btn.active-home .tab-count, .tab-btn.active-away .tab-count { background: rgba(255,255,255,0.25); }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* PANTRY NOTE */
+  .pantry-note {
+    padding: 12px 20px;
+    font-size: 12.5px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .pantry-note.home { background: #eef4ee; border-bottom: 1px solid #c5d9c5; color: var(--olive); }
+  .pantry-note.away { background: #e8f3f7; border-bottom: 1px solid #b8d5de; color: var(--ocean-dark); }
+
+  /* GRID */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); border-top: 1px solid var(--border); }
+
+  .category { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); animation: fadeUp 0.35s ease both; }
+  .category:last-child { border-right: none; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .category:nth-child(1) { animation-delay: 0.03s; } .category:nth-child(2) { animation-delay: 0.06s; }
+  .category:nth-child(3) { animation-delay: 0.09s; } .category:nth-child(4) { animation-delay: 0.12s; }
+  .category:nth-child(5) { animation-delay: 0.15s; } .category:nth-child(6) { animation-delay: 0.18s; }
+  .category:nth-child(7) { animation-delay: 0.21s; } .category:nth-child(8) { animation-delay: 0.24s; }
+
+  .cat-header { border-bottom: 1px solid var(--border); padding: 11px 16px; display: flex; align-items: center; gap: 9px; }
+  .panel-home .cat-header { background: var(--sand); }
+  .panel-away .cat-header { background: var(--sand-blue); }
+  .cat-icon { font-size: 17px; }
+  .cat-title { font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
+  .panel-home .cat-title { color: var(--olive); }
+  .panel-away .cat-title { color: var(--ocean); }
+
+  .item-list { padding: 4px 0; }
+  .panel-home .item-list { background: var(--cream); }
+  .panel-away .item-list { background: var(--cream-blue); }
+
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 16px; border-bottom: 1px solid rgba(221,213,192,0.45); cursor: pointer; transition: background 0.12s; }
+  .panel-away .item { border-bottom-color: rgba(200,221,226,0.5); }
+  .item:last-child { border-bottom: none; }
+  .panel-home .item:hover { background: var(--sand); }
+  .panel-away .item:hover { background: var(--sand-blue); }
+  .item.checked { opacity: 0.38; }
+  .item.checked .item-name { text-decoration: line-through; }
+
+  .checkbox { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 3px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: #fff; }
+  .panel-home .item.checked .checkbox { background: var(--olive); border-color: var(--olive); }
+  .panel-away .item.checked .checkbox { background: var(--ocean); border-color: var(--ocean); }
+  .item.checked .checkbox::after { content: '✓'; color: #fff; font-size: 10px; font-weight: 700; }
+
+  .item-info { flex: 1; }
+  .item-name { font-size: 13px; line-height: 1.35; }
+  .item-note { font-size: 11px; color: var(--muted); font-style: italic; margin-top: 1px; }
+
+  .last-bought {
+    font-size: 10.5px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .last-bought-label { color: var(--muted); }
+  .last-bought-date {
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-size: 10px;
+  }
+  .date-fresh { background: #e8f5e9; color: #2e7d32; }
+  .date-aging { background: #fff8e1; color: #f57f17; }
+  .date-old   { background: #fce4ec; color: #c62828; }
+  .date-none  { color: #bbb; font-style: italic; }
+
+  /* PROGRESS */
+  .progress-wrap {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    border-top: 1px solid var(--border);
+  }
+  .panel-home .progress-wrap { background: var(--sand); }
+  .panel-away .progress-wrap { background: var(--sand-blue); }
+  .progress-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; width: 0%; transition: width 0.3s; }
+  .panel-home .progress-fill { background: var(--olive); }
+  .panel-away .progress-fill { background: var(--ocean); }
+  .progress-count { font-size: 12px; font-weight: 500; white-space: nowrap; min-width: 58px; text-align: right; }
+  .panel-home .progress-count { color: var(--olive); }
+  .panel-away .progress-count { color: var(--ocean); }
+
+  .new-trip-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    padding: 4px 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .panel-home .new-trip-btn { background: var(--olive); color: #fff; }
+  .panel-away .new-trip-btn { background: var(--ocean); color: #fff; }
+  .new-trip-btn:hover { opacity: 0.85; }
+
+  .footer { text-align: center; padding: 16px; font-size: 11.5px; color: var(--muted); background: var(--cream); border-top: 1px solid var(--border); }
+  @media print { .print-btn, .tabs, .progress-wrap { display: none !important; } .panel { display: block !important; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">Weekly Shopping — Two Homes</div>
+  <h1>Mediterranean <em>Shopping Lists</em></h1>
+  <div class="hero-sub">Tap a tab to switch between your home shop & away shop · tap items to check off</div>
+  <button class="print-btn" onclick="window.print()">🖨 Print Both Lists</button>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active-home" id="tab-home" onclick="switchTab('home')">
+    🏠 Home Shop <span class="tab-count" id="count-home">Sunday</span>
+  </button>
+  <button class="tab-btn" id="tab-away" onclick="switchTab('away')">
+    ✈️ Away Shop <span class="tab-count" id="count-away">Tue arrival</span>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════ HOME PANEL ═══════════════════════════════════ -->
+<div class="panel panel-home active" id="panel-home">
+
+  <div class="pantry-note home">
+    🛒 <span><strong>Shop Sunday</strong> for Mon full day + Tue breakfast & lunch + Fri dinner. Also prep soup & hard-boil eggs for the week.</span>
+  </div>
+
+  <div class="grid">
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🥦</span><div class="cat-title">Produce — Home</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Baby spinach (large bag)</div><div class="item-note">Tue eggs, smoothies</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Kale (1 bunch)</div><div class="item-note">Wed slow cooker soup</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Broccoli (1 large head)</div><div class="item-note">Mon salmon dinner</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Asparagus (1 bunch)</div><div class="item-note">Fri cod dinner at home</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Cherry tomatoes (1 pint)</div><div class="item-note">Mon salmon + Tue salad</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">English cucumber (2)</div><div class="item-note">Mon wrap, Tue salad & snacks</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Celery (1 bunch)</div><div class="item-note">Wed soup, snacking</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Avocado (2)</div><div class="item-note">Mon wrap, Fri return dinner prep</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Fresh parsley (1 bunch)</div><div class="item-note">Tue chickpea salad</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Carrots (bag)</div><div class="item-note">Snacking with hummus</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Garlic (1 head)</div><div class="item-note">Used all week</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Lemons (4)</div><div class="item-note">Dressings, fish, soup</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Shallots (2)</div><div class="item-note">Soup base</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🍓</span><div class="cat-title">Fruit — Home</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Bananas (bunch)</div><div class="item-note">Mon oats, smoothies</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Strawberries (1 pint)</div><div class="item-note">Tue kid breakfast, Fri skewers</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Frozen mixed berries (large bag)</div><div class="item-note">Mon oats, smoothie</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Apples (3)</div><div class="item-note">Mon adult snack, kid snacks</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Mango (1–2)</div><div class="item-note">Mon kid snack</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Oranges or clementines (bag)</div><div class="item-note">Tue kid snack</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Grapes + watermelon</div><div class="item-note">Fri skewers for the kids</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Leeks (1 bunch)</div><div class="item-note">Mild flavor base for soup</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🐟</span><div class="cat-title">Protein — Home</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Salmon fillets (2 portions)</div><div class="item-note">Monday dinner</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Cod fillets (2 portions)</div><div class="item-note">Friday dinner at home</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">🐔 Eggs — use your own flock!</div><div class="item-note">Hard-boil extras Sunday for the week</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🫘</span><div class="cat-title">Beans, Grains & Bread — Home</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Cannellini beans (2 cans)</div><div class="item-note">Mon wrap + Wed soup</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Chickpeas (1 can)</div><div class="item-note">Tue chickpea salad</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Brown rice or quinoa (bag)</div><div class="item-note">Mon salmon dinner</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Rolled oats — old-fashioned only (canister)</div><div class="item-note">Mon overnight oats</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Whole wheat tortillas</div><div class="item-note">Monday wraps</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Whole grain pita (pack)</div><div class="item-note">Tue lunch</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Whole grain bread / sourdough</div><div class="item-note">Tue breakfast toast</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Crusty whole grain loaf</div><div class="item-note">Wed soup side</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🫙</span><div class="cat-title">Pantry — Home</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Extra virgin olive oil</div><div class="item-note">Used constantly</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Tahini</div><div class="item-note">Wraps, dressings</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Hummus (tub)</div><div class="item-note">Wraps & snacks</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Diced tomatoes, canned (2 cans)</div><div class="item-note">Wed soup</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Low-sodium veggie broth (32 oz)</div><div class="item-note">Wed slow cooker soup</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Capers (small jar)</div><div class="item-note">Fri cod</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Kalamata olives</div><div class="item-note">Mon wrap, Tue salad</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Almond butter</div><div class="item-note">Mon snack</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Chia seeds</div><div class="item-note">Mon overnight oats</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Walnuts + unsalted almonds</div><div class="item-note">Heart-healthy snacks</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Dark chocolate (70%+)</div><div class="item-note">Fri adult treat</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Unsweetened almond milk (half gallon)</div><div class="item-note">Oats & smoothies</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Feta cheese (small, light) — adult only</div><div class="item-note">Mon wrap garnish</div></div></div>
+        <div class="item" onclick="toggle(this,'home')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Artichoke hearts, canned (1 can)</div><div class="item-note">Tue sheet pan — bring to second home</div></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">Home shop progress</div>
+    <div class="progress-bar"><div class="progress-fill" id="fill-home"></div></div>
+    <div class="progress-count" id="pcount-home">0 / 0</div>
+    <button class="new-trip-btn" onclick="clearChecks()">New trip</button>
+  </div>
+
+</div><!-- end home panel -->
+
+<!-- ═══════════════════════════════════ AWAY PANEL ═══════════════════════════════════ -->
+<div class="panel panel-away" id="panel-away">
+
+  <div class="pantry-note away">
+    🛒 <span><strong>Stop on arrival Tuesday or buy near second home.</strong> Keep the pantry staples stocked there permanently — you only need fresh items each week.</span>
+  </div>
+
+  <div class="grid">
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🥦</span><div class="cat-title">Produce — Away</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Baby spinach or arugula (bag)</div><div class="item-note">Wed smoothie, Fri lentil bowl</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Zucchini (2)</div><div class="item-note">Tue sheet pan + Thu shrimp</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Cherry tomatoes (1 pint)</div><div class="item-note">Tue sheet pan + Thu shrimp</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">English cucumber (1)</div><div class="item-note">Wed pita lunch, Thu snack, Fri bowl</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Sweet potato (2)</div><div class="item-note">Fri lentil bowl — roast Wed night</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Celery (small bunch)</div><div class="item-note">Wed soup, Thu snack</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Avocado (2)</div><div class="item-note">Wed toast, Thu breakfast</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Tomatoes on the vine (2–3)</div><div class="item-note">Thu avocado toast</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Garlic (1 small head)</div><div class="item-note">Or keep stocked at second home</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Lemons (3–4)</div><div class="item-note">Or keep stocked at second home</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Shallots (2)</div><div class="item-note">Soup flavor base</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🍓</span><div class="cat-title">Fruit — Away</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Bananas (3–4)</div><div class="item-note">Wed smoothie, snacks</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Frozen mixed berries (bag)</div><div class="item-note">Wed smoothie — keep stocked in freezer</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Apples + pears (3–4 total)</div><div class="item-note">Thu snacks</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Peaches (2) or canned in water</div><div class="item-note">Fri overnight oats</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Grapes or watermelon</div><div class="item-note">Wed snacks</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🐟</span><div class="cat-title">Protein — Away</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Boneless skinless chicken thighs (3–4)</div><div class="item-note">Tue dinner → Wed leftover lunch</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Shrimp, peeled & deveined (½ lb)</div><div class="item-note">Thu dinner — frozen works great</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Eggs (small carton)</div><div class="item-note">Thu soft-boiled · or bring hard-boiled from home</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🫘</span><div class="cat-title">Beans, Grains & Bread — Away</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Cannellini beans (2 cans)</div><div class="item-note">Wed slow cooker soup</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Green or brown lentils (bag or canned)</div><div class="item-note">Fri power bowl — keep stocked</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Whole wheat orzo (box)</div><div class="item-note">Thu shrimp dinner — keep stocked</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Rolled oats — old-fashioned only</div><div class="item-note">Fri overnight oats — keep stocked</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Whole grain pita (pack)</div><div class="item-note">Wed leftover chicken lunch</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Whole grain bread / sourdough</div><div class="item-note">Wed & Thu breakfast toast</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Crusty whole grain loaf</div><div class="item-note">Wed soup side</div></div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-header"><span class="cat-icon">🫙</span><div class="cat-title">Pantry — Keep Stocked at Second Home</div></div>
+      <div class="item-list">
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Extra virgin olive oil ⟳</div><div class="item-note">Replenish as needed</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Tahini ⟳</div><div class="item-note">Dressings & wraps</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Hummus (tub) ⟳</div><div class="item-note">Snacks & wraps</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Diced tomatoes, canned (2) ⟳</div><div class="item-note">Wed soup</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Low-sodium veggie broth (32 oz) ⟳</div><div class="item-note">Wed soup</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Everything bagel seasoning ⟳</div><div class="item-note">Thu avocado toast</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Artichoke hearts, canned ⟳</div><div class="item-note">Tue sheet pan chicken</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Almond milk, unsweetened ⟳</div><div class="item-note">Wed smoothie, Fri oats</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Ground flaxseed ⟳</div><div class="item-note">Wed smoothie</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Pumpkin seeds + honey ⟳</div><div class="item-note">Fri overnight oats</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Unsalted almonds + walnuts ⟳</div><div class="item-note">Snacks all week</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Core spices: oregano, cumin, paprika, pepper flakes ⟳</div><div class="item-note">Keep permanently stocked</div></div></div>
+        <div class="item" onclick="toggle(this,'away')"><div class="checkbox"></div><div class="item-info"><div class="item-name">Red pepper flakes ⟳</div><div class="item-note">Adult seasoning</div></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">Away shop progress</div>
+    <div class="progress-bar"><div class="progress-fill" id="fill-away"></div></div>
+    <div class="progress-count" id="pcount-away">0 / 0</div>
+    <button class="new-trip-btn" onclick="clearChecks()">New trip</button>
+  </div>
+
+</div><!-- end away panel -->
+
+<div class="footer">
+  🐔 Eggs: use your own flock at home · bring hard-boiled to second home &nbsp;·&nbsp; ⟳ items = keep permanently stocked at second home &nbsp;·&nbsp; 🌾 Rolled oats only for overnight oats
+</div>
+
+<script>
+  // ── Storage helpers ──────────────────────────────────────────────
+  const STORE_KEY = 'mealplan_purchased_dates';
+
+  function loadDates() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(e) { return {}; }
+  }
+  function saveDates(dates) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(dates)); } catch(e) {}
+  }
+
+  // ── Assign unique IDs to every item on page load ─────────────────
+  function initItems() {
+    document.querySelectorAll('.item').forEach((el, i) => {
+      if (!el.dataset.id) el.dataset.id = 'item_' + i;
+      // inject last-bought row if not already present
+      if (!el.querySelector('.last-bought')) {
+        const div = document.createElement('div');
+        div.className = 'last-bought';
+        div.innerHTML = '<span class="last-bought-label">Last bought:</span><span class="last-bought-date date-none">never</span>';
+        el.querySelector('.item-info').appendChild(div);
+      }
+    });
+    renderAllDates();
+  }
+
+  // ── Format & colour-code a stored date string ─────────────────────
+  function formatDate(dateStr) {
+    if (!dateStr) return null;
+    const bought  = new Date(dateStr);
+    const today   = new Date();
+    const diffDays = Math.floor((today - bought) / 86400000);
+    const label = bought.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    let cls;
+    if (diffDays <= 7)       cls = 'date-fresh';
+    else if (diffDays <= 14) cls = 'date-aging';
+    else                     cls = 'date-old';
+    return { label, cls, diffDays };
+  }
+
+  // ── Update the date badge on a single item ────────────────────────
+  function renderDate(el) {
+    const dates = loadDates();
+    const info  = dates[el.dataset.id];
+    const badge = el.querySelector('.last-bought-date');
+    if (!badge) return;
+    if (info) {
+      const fmt = formatDate(info);
+      badge.textContent = fmt.label + (fmt.diffDays === 0 ? ' (today)' : fmt.diffDays === 1 ? ' (yesterday)' : ' (' + fmt.diffDays + 'd ago)');
+      badge.className = 'last-bought-date ' + fmt.cls;
+    } else {
+      badge.textContent = 'never';
+      badge.className = 'last-bought-date date-none';
+    }
+  }
+
+  function renderAllDates() {
+    document.querySelectorAll('.item').forEach(el => renderDate(el));
+  }
+
+  // ── Toggle check + record purchase date ──────────────────────────
+  function toggle(el, panel) {
+    const wasChecked = el.classList.contains('checked');
+    el.classList.toggle('checked');
+    const dates = loadDates();
+    if (!wasChecked) {
+      // just got checked → record today
+      dates[el.dataset.id] = new Date().toISOString().split('T')[0];
+    }
+    // unchecking does NOT erase the date — you still bought it
+    saveDates(dates);
+    renderDate(el);
+    updateProgress();
+  }
+
+  // ── Clear all checks (but keep dates) — called on new shop week ──
+  function clearChecks() {
+    if (!confirm('Clear all checkmarks for a new shopping trip?\n(Purchase dates are kept.)')) return;
+    document.querySelectorAll('.item.checked').forEach(el => el.classList.remove('checked'));
+    updateProgress();
+  }
+
+  // ── Tab switch ────────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.getElementById('panel-home').classList.toggle('active', tab === 'home');
+    document.getElementById('panel-away').classList.toggle('active', tab === 'away');
+    document.getElementById('tab-home').className = 'tab-btn' + (tab === 'home' ? ' active-home' : '');
+    document.getElementById('tab-away').className = 'tab-btn' + (tab === 'away' ? ' active-away' : '');
+    updateProgress();
+  }
+
+  // ── Progress bars ─────────────────────────────────────────────────
+  function updateProgress() {
+    ['home','away'].forEach(p => {
+      const panel   = document.getElementById('panel-' + p);
+      const all     = panel.querySelectorAll('.item');
+      const checked = panel.querySelectorAll('.item.checked');
+      const pct     = all.length ? (checked.length / all.length * 100) : 0;
+      document.getElementById('fill-' + p).style.width = pct + '%';
+      document.getElementById('pcount-' + p).textContent = checked.length + ' / ' + all.length;
+      const countEl = document.getElementById('count-' + p);
+      if (checked.length > 0) countEl.textContent = checked.length + '/' + all.length + ' ✓';
+      else countEl.textContent = p === 'home' ? 'Sunday' : 'Tue arrival';
+    });
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────
+  initItems();
+  updateProgress();
+</script>
+
+</body>
+</html>
